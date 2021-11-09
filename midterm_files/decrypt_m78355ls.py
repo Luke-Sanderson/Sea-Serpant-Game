@@ -1,7 +1,6 @@
 import sys
+import os
 morseCodeChart = {'.-':'a','-...':'b','-.-.':'c','-..':'d','.':'e','..-.':'f','--.':'g','....':'h','..':'i','.---':'j','-.-':'k','.-..':'l','--':'m','-.':'n','---':'o','.--.':'p','--.-':'q','.-.':'r','...':'s','-':'t','..-':'u','...-':'v','.--':'w','-..-':'x','-.--':'y','--..':'z'}
-with open(sys.argv[1]) as inputFile:
-    inputString = inputFile.read()
 
 def decryptMorse(str):
     output = ""
@@ -28,13 +27,24 @@ def decryptHex(str):
         output += chr(int(hex,16))
     return output
 
-if inputString[0] == "H":
-    outputString = decryptHex(inputString)
-elif inputString[0] == "C":
-    outputString = decryptCaesar(inputString)
-else:
-    outputString = decryptMorse(inputString)
+def decrypt(inputString):
+    if inputString[0] == "H":
+        outputString = decryptHex(inputString)
+    elif inputString[0] == "C":
+        outputString = decryptCaesar(inputString)
+    else:
+        outputString = decryptMorse(inputString)
 
-print(outputString)
-with open(sys.argv[2],"w") as outputFile:
-    outputFile.write(outputString)
+    print(outputString)
+    return outputString
+
+for root, dirs, files in os.walk(sys.argv[1], topdown=True):
+    i=1
+    print(files)
+    for file in files:
+        with open(root + file) as inputFile:
+            outputString = decrypt(inputFile.read())
+
+        with open(sys.argv[2]+file[:-4]+"_m78355ls.txt","w") as outputFile:
+            outputFile.write(outputString)
+        i += 1
