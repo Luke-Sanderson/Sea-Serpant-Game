@@ -40,11 +40,9 @@ def calcScore(inputString):
 
 
 for root, dirs, files in os.walk(sys.argv[1]):
-    i=1
     for file in files:
         with open(root + file) as inputFile:
             outputString = calcScore(inputFile.read())
 
         with open(sys.argv[2]+file[:-4]+"_m78355ls.txt","w") as outputFile:
             outputFile.write(outputString)
-        i += 1
