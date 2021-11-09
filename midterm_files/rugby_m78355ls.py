@@ -21,8 +21,8 @@ def calcScore(inputString):
             else: score2 += 3
         if char == 'd':
             if prev == '1':
-                score1 += 1
-            else: score2 += 1
+                score1 += 3
+            else: score2 += 3
 
         prev = char
 
@@ -45,6 +45,6 @@ for root, dirs, files in os.walk(sys.argv[1]):
         with open(root + file) as inputFile:
             outputString = calcScore(inputFile.read())
 
-        with open(sys.argv[2]+"test_file"+str(i)+"_m78355ls.txt","w") as outputFile:
+        with open(sys.argv[2]+file[:-4]+"_m78355ls.txt","w") as outputFile:
             outputFile.write(outputString)
         i += 1
