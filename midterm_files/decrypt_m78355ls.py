@@ -35,7 +35,7 @@ def decrypt(inputString):
     else:
         outputString = decryptMorse(inputString)
 
-    return outputString
+    return outputString.lower()
 
 for root, dirs, files in os.walk(sys.argv[1]):
     for file in files:
