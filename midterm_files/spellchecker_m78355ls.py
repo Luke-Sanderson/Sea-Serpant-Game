@@ -34,8 +34,7 @@ def check(str):
     global incorrWord
 
     wordsToCheck = str.split()
-    print(wordsToCheck)
-    print("\n")
+
     with open(sys.argv[1]) as dictionary:
         dictWords = dictionary.readlines()
         for word in wordsToCheck:
