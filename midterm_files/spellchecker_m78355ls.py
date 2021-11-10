@@ -34,6 +34,8 @@ def check(str):
     global incorrWord
 
     wordsToCheck = str.split()
+    print(wordsToCheck)
+    print("\n")
     with open(sys.argv[1]) as dictionary:
         dictWords = dictionary.readlines()
         for word in wordsToCheck:
@@ -60,7 +62,6 @@ for root, dirs, files in os.walk(sys.argv[2]):
         with open(root + file) as inputFile:
             formatted = format(inputFile.read())
             check(formatted)
-
 
         with open(sys.argv[3]+file[:-4]+"_m78355ls.txt","w") as outputFile:
             outputFile.write("m78355ls\n")
