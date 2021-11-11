@@ -13,6 +13,7 @@ def format(str):
     global puncChange
     global numChange
 
+    punctuation = ['.','?','!',',',':',';','-','‒','(',')','[',']','{','}',"'",'"','…']
     for char in str:
         if re.match("[a-z]",char) or char == " " or char == "\n":
             continue
@@ -21,9 +22,12 @@ def format(str):
         elif(re.match("[0-9]",char)):
             numChange += 1
             str = str.replace(char,"",1)
-        else:
+        elif(char in punctuation):
             puncChange += 1
             str = str.replace(char,"",1)
+        # else:
+        #     puncChange += 1
+        #     str = str.replace(char,"",1)
 
     str = str.lower()
     return str
