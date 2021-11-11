@@ -25,6 +25,7 @@ def format(str):
         elif(char in punctuation):
             puncChange += 1
             str = str.replace(char,"",1)
+
         # else:
         #     puncChange += 1
         #     str = str.replace(char,"",1)
