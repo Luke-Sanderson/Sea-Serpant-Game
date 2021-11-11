@@ -58,11 +58,11 @@ for root, dirs, files in os.walk(sys.argv[2]):
         totalWord = 0
         corrWord = 0
         incorrWord = 0
-        with open(root + file) as inputFile:
+        with open(os.path.join(root, file)) as inputFile:
             formatted = format(inputFile.read())
             check(formatted)
 
-        with open(sys.argv[3]+file[:-4]+"_m78355ls.txt","w") as outputFile:
+        with open(os.path.join(sys.argv[3], file[:-4]+"_m78355ls.txt"),"w") as outputFile:
             outputFile.write("m78355ls\n")
             outputFile.write("Formatting ###################\n")
             outputFile.write("Number of upper case words changed: " + str(upperChange) + "\n")
