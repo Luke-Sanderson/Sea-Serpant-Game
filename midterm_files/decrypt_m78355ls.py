@@ -42,8 +42,8 @@ def decrypt(inputString):
 
 for root, dirs, files in os.walk(sys.argv[1]):
     for file in files:
-        with open(root + file) as inputFile:
+        with open(os.path.join(root, file)) as inputFile:
             outputString = decrypt(inputFile.read())
 
-        with open(sys.argv[2]+file[:-4]+"_m78355ls.txt","w") as outputFile:
+        with open(os.path.join(sys.argv[2], file[:-4]+"_m78355ls.txt"),"w") as outputFile:
             outputFile.write(outputString)
