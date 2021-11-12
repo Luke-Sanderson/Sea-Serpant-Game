@@ -67,12 +67,9 @@ def check(str):
                 corrWord += 1
             else:
                 incorrWord += 1
-                print(word)
 
 for root, dirs, files in os.walk(sys.argv[2]):
     for file in files:
-        print(file)
-        print("\n\n")
         upperChange = 0
         puncChange = 0
         numChange = 0
@@ -86,7 +83,7 @@ for root, dirs, files in os.walk(sys.argv[2]):
         with open(os.path.join(sys.argv[3], file[:-4]+"_m78355ls.txt"),"w") as outputFile:
             outputFile.write("m78355ls\n")
             outputFile.write("Formatting ###################\n")
-            outputFile.write("Number of upper case words changed: " + str(upperChange) + "\n")
+            outputFile.write("Number of upper case letters changed: " + str(upperChange) + "\n")
             outputFile.write("Number of punctuations removed: " + str(puncChange) + "\n")
             outputFile.write("Number of numbers removed: " + str(numChange) + "\n")
             outputFile.write("Spellchecking ###################\n")
