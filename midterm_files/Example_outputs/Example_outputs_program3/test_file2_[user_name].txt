@@ -1,6 +1,6 @@
 [user_name]
 Formatting ###################
-Number of upper case words changed: 5
+Number of upper case letters changed: 5
 Number of punctuations removed: 9
 Number of numbers removed: 4
 Spellchecking ###################
