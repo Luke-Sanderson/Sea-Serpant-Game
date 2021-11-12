@@ -14,17 +14,30 @@ def format(str):
     global numChange
 
     punctuation = ['.','?','!',',',':',';','-','‒','(',')','[',']','{','}',"'",'"','…']
-    for char in str:
+    i = 0
+    while i < len(str):
+        char = str[i]
         if re.match("[a-z]",char) or char == " " or char == "\n":
+            i += 1
             continue
         if(re.match("[A-Z]",char)):
             upperChange += 1
+            i += 1
         elif(re.match("[0-9]",char)):
             numChange += 1
             str = str.replace(char,"",1)
         elif(char in punctuation):
             puncChange += 1
-            str = str.replace(char,"",1)
+            try:
+                if (char == '.' and str[str.index(char) + 1] == '.' and str[str.index(char) + 2] == '.'):
+                    str = str.replace(char,"",3)
+                else:
+                    str = str.replace(char,"",1)
+            except:
+                str = str.replace(char,"",1)
+
+        else:
+            i+=1
 
         # else:
         #     puncChange += 1
@@ -54,9 +67,12 @@ def check(str):
                 corrWord += 1
             else:
                 incorrWord += 1
+                print(word)
 
 for root, dirs, files in os.walk(sys.argv[2]):
     for file in files:
+        print(file)
+        print("\n\n")
         upperChange = 0
         puncChange = 0
         numChange = 0
