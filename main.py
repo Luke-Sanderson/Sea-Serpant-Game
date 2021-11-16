@@ -1,23 +1,26 @@
 #Resolution set to 1366x768
 import tkinter as tk
-
+import math
 
 class segment:
     """docstring for segment."""
     radius = 50
-    x_velocity = 0
-    y_velocity = 0
+    # x_velocity = 0
+    # y_velocity = 0
+    velocity = 10
+    direction = 0
     def __init__(self, x, y, canvas):
 
         self.drawing = canvas.create_oval(x, y, self.radius + x, self.radius + y, fill="blue")
         self.canvas = canvas
-
+        #self.canvas.bind("<Button-1>",self.centre)
     def update(self):
-        self.x_velocity += 1
-        self.y_velocity += 1
-
-        self.canvas.move(self.drawing, self.x_velocity, self.y_velocity)
-
+        x_velocity = math.cos(self.direction) * self.velocity
+        y_velocity = math.sin(self.direction) * self.velocity
+        self.canvas.move(self.drawing, x_velocity, y_velocity)
+    def centre(self, KeyPress):
+        print(KeyPress)
+        self.canvas.coords(self.drawing, 0,0,50 , 50)
 class Game:
     """docstring for Game."""
     sprites = []
@@ -36,8 +39,13 @@ class Game:
 
     def mainloop(self):
         self.window.after(200, self.gameloop)
+        self.window.bind("<Key>", self.KeyPress)
         self.window.mainloop()
-
+    def KeyPress(self, Key):
+        if(Key.keysym == "a"):
+            self.head.direction -= 0.1
+        elif(Key.keysym == "d"):
+            self.head.direction += 0.1
     def gameloop(self):
         self.window.after(200, self.gameloop)
         self.head.update()
