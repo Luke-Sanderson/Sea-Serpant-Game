@@ -1,5 +1,5 @@
 #Resolution set to 1366x768
-from tkinter import Tk, Canvas, ttk
+from tkinter import Tk, Canvas, ttk, StringVar
 from time import perf_counter_ns
 from serpent import *
 
@@ -54,6 +54,12 @@ class Game:
 
 
     def initialise_game(self):
+        self.points = 0
+        self.points_counter = StringVar()
+        self.points_counter.set(str(self.points))
+        point_counter = ttk.Label(self.canvas_game, textvariable = self.points_counter, justify="center", font=("Arial",40))
+        point_counter.place(x="633",y="10", height="60")
+
         self.segment_array = []
 
         self.head = Segment(100,400,self.canvas_game, 0)
@@ -81,7 +87,10 @@ class Game:
             self.head.direction += 0.1
             self.head.velocity -= 0.1
         elif(Key.keysym == "Escape"):
-            self.switch_scene(self.GAME_STATES[0])
+            if self.current_game_state == self.GAME_STATES[0]:
+                exit()
+            elif self.current_game_state == self.GAME_STATES[2]:
+                self.switch_scene(self.GAME_STATES[0])
         elif(Key.keysym.lower() == "c"):
             coords = self.canvas_game.coords(self.segment_array[len(self.segment_array) - 1].drawing)
             self.segment_array.append(Segment(coords[0],coords[1],self.canvas_game, len(self.segment_array)))
@@ -89,6 +98,9 @@ class Game:
 
 
     def game_loop(self):
+
+        # self.points += 1
+        # self.points_counter.set(str(self.points))
 
         #Calculates difference in time between update loops and adjusts tick rate
         difference = (100/3) - ((perf_counter_ns() - self.previous_time)/1000000)
