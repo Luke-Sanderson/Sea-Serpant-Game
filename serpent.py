@@ -19,6 +19,7 @@ class Segment:
 
     def move_serpent(self, segment_array):
         current_coords = self.canvas.coords(self.drawing)
+        #print(current_coords)
         if current_coords[0] < 0:
             self.canvas.coords(self.drawing, 0, current_coords[1], self.radius, current_coords[1] + self.radius)
             self.direction = 0

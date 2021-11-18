@@ -93,6 +93,7 @@ class Game:
             elif(Key.keysym.lower() == "c"):
                 coords = self.canvas_game.coords(self.segment_array[len(self.segment_array) - 1].drawing)
                 self.segment_array.append(Segment(coords[0],coords[1],self.canvas_game, len(self.segment_array)))
+                self.head.canvas.lift(self.head.drawing) #Optional make head pop
 
         if(Key.keysym == "Escape"):
             if self.current_game_state == self.GAME_STATES[0]:
@@ -103,7 +104,7 @@ class Game:
 
 
     def game_loop(self):
-
+        #print(self.current_game_state)
         # self.points += 1
         # self.points_counter.set(str(self.points))
 
@@ -114,6 +115,8 @@ class Game:
         if self.current_game_state == self.GAME_STATES[2]:
             for segment in self.segment_array:
                 segment.move_serpent(self.segment_array)
+            self.boat.move()
+
             self.root.after(self.tick_rate, self.game_loop)
 
 
