@@ -1,7 +1,8 @@
 #Resolution set to 1366x768
-from tkinter import Tk, Canvas, ttk, StringVar
+from tkinter import Tk, Canvas, ttk, StringVar, PhotoImage
 from time import perf_counter_ns
 from serpent import *
+from boat import *
 
 class Game:
     """docstring for Game."""
@@ -14,6 +15,8 @@ class Game:
         self.root.geometry("1366x768")
         self.root.attributes("-fullscreen", True)
         self.root.config(cursor = "pirate")
+
+        self.boat_image = PhotoImage(file="Boat1.png")
 
         self.current_game_state = self.GAME_STATES[0]
 
@@ -30,7 +33,6 @@ class Game:
         if self.current_game_state == "main_menu":
             if next == "in_game":
                 self.canvas_menu.pack_forget()
-                self.canvas_game.delete("all")
                 self.initialise_game()
                 self.canvas_game.pack()
                 self.root.after(self.tick_rate, self.game_loop)
@@ -38,6 +40,7 @@ class Game:
         elif self.current_game_state == "in_game":
             if next == "main_menu":
                 self.canvas_game.pack_forget()
+                self.canvas_game.delete("all")
                 self.canvas_menu.pack()
 
         self.current_game_state = next
@@ -59,6 +62,7 @@ class Game:
         self.points_counter.set(str(self.points))
         point_counter = ttk.Label(self.canvas_game, textvariable = self.points_counter, justify="center", font=("Arial",40))
         point_counter.place(x="633",y="10", height="60")
+        self.boat = Boat(100,180,self.canvas_game, self.boat_image)
 
         self.segment_array = []
 
@@ -79,21 +83,22 @@ class Game:
         self.root.mainloop()
 
     def key_press(self, Key):
+        if self.current_game_state == self.GAME_STATES[2]:
+            if(Key.keysym.lower() == "a" and self.head.canvas.coords(self.head.drawing)[1] > 200):
+                self.head.direction -= 0.1
+                self.head.velocity -= 0.1
+            elif(Key.keysym.lower() == "d" and self.head.canvas.coords(self.head.drawing)[1] > 200):
+                self.head.direction += 0.1
+                self.head.velocity -= 0.1
+            elif(Key.keysym.lower() == "c"):
+                coords = self.canvas_game.coords(self.segment_array[len(self.segment_array) - 1].drawing)
+                self.segment_array.append(Segment(coords[0],coords[1],self.canvas_game, len(self.segment_array)))
 
-        if(Key.keysym.lower() == "a" and self.head.canvas.coords(self.head.drawing)[1] > 200):
-            self.head.direction -= 0.1
-            self.head.velocity -= 0.1
-        elif(Key.keysym.lower() == "d" and self.head.canvas.coords(self.head.drawing)[1] > 200):
-            self.head.direction += 0.1
-            self.head.velocity -= 0.1
-        elif(Key.keysym == "Escape"):
+        if(Key.keysym == "Escape"):
             if self.current_game_state == self.GAME_STATES[0]:
                 exit()
             elif self.current_game_state == self.GAME_STATES[2]:
                 self.switch_scene(self.GAME_STATES[0])
-        elif(Key.keysym.lower() == "c"):
-            coords = self.canvas_game.coords(self.segment_array[len(self.segment_array) - 1].drawing)
-            self.segment_array.append(Segment(coords[0],coords[1],self.canvas_game, len(self.segment_array)))
 
 
 
