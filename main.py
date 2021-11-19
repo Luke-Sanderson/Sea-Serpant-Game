@@ -1,8 +1,10 @@
 #Resolution set to 1366x768
 from tkinter import Tk, Canvas, ttk, StringVar, PhotoImage
 from time import perf_counter_ns
+from random import randint,random
 from serpent import *
 from boat import *
+
 
 class Game:
     """docstring for Game."""
@@ -16,7 +18,7 @@ class Game:
         self.root.attributes("-fullscreen", True)
         self.root.config(cursor = "pirate")
 
-        self.boat_image = PhotoImage(file="Boat1.png")
+        self.boat_image = PhotoImage(file="Boat1.png") #TODO: Add more boat sprites to an array. Make it randomly choose the sprite
 
         self.current_game_state = self.GAME_STATES[0]
 
@@ -62,9 +64,11 @@ class Game:
         self.points_counter.set(str(self.points))
         point_counter = ttk.Label(self.canvas_game, textvariable = self.points_counter, justify="center", font=("Arial",40))
         point_counter.place(x="633",y="10", height="60")
-        self.boat = Boat(100,180,self.canvas_game, self.boat_image)
+
 
         self.segment_array = []
+        self.boat_array = []
+
 
         self.head = Segment(100,400,self.canvas_game, 0)
         self.canvas_game.itemconfig(self.head.drawing, fill="green")
@@ -112,12 +116,20 @@ class Game:
         difference = (100/3) - ((perf_counter_ns() - self.previous_time)/1000000)
         self.tick_rate += round(difference)
         self.previous_time = perf_counter_ns()
-        if self.current_game_state == self.GAME_STATES[2]:
-            for segment in self.segment_array:
-                segment.move_serpent(self.segment_array)
-            self.boat.move()
 
-            self.root.after(self.tick_rate, self.game_loop)
+        if self.current_game_state != self.GAME_STATES[2]:
+            return
+
+        if len(self.boat_array) == 0 or (len(self.boat_array) < 5 and randint(0,200) == 1):
+            self.boat_array.append(Boat(random()*1366,180,self.canvas_game, self.boat_image, random()*3+1))
+
+
+        for segment in self.segment_array:
+            segment.move_serpent(self.segment_array)
+        for boat in self.boat_array:
+            boat.move()
+
+        self.root.after(self.tick_rate, self.game_loop)
 
 
 
