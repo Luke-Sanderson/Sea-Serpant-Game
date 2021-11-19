@@ -9,7 +9,9 @@ from boat import *
 class Game:
     """docstring for Game."""
     tick_rate = 30
-    GAME_STATES = ["main_menu", "pause", "in_game"]
+    GAME_STATES = ["main_menu", "pause", "in_game", "dead"]
+    boat_array = []
+    segment_array = []
 
     def __init__(self):
         self.root = Tk()
@@ -24,6 +26,7 @@ class Game:
 
         self.canvas_game = Canvas(self.root, width="1366", height="768")
         self.canvas_menu = Canvas(self.root, width="1366", height="768")
+        self.canvas_death_menu = Canvas(self.root, width="1366", height="768")
 
         self.initialise_menu()
         self.canvas_menu.pack()
@@ -44,21 +47,51 @@ class Game:
                 self.canvas_game.pack_forget()
                 self.canvas_game.delete("all")
                 self.canvas_menu.pack()
+            elif next == "dead":
+                self.canvas_game.pack_forget()
+                self.canvas_game.delete("all")
+                self.initialise_death_screen()
+                self.canvas_death_menu.pack()
+        elif self.current_game_state == "dead":
+            if next == "main_menu":
+                self.canvas_death_menu.pack_forget()
+                self.canvas_death_menu.delete("all")
+                self.canvas_menu.pack()
+            elif next == "in_game":
+                self.canvas_death_menu.pack_forget()
+                self.canvas_death_menu.delete("all")
+                self.initialise_game()
+                self.canvas_game.pack()
+                self.root.after(self.tick_rate, self.game_loop)
 
         self.current_game_state = next
 
     def initialise_menu(self):
-        self.menu_buttons = []
-        self.menu_buttons.append(ttk.Button(self.canvas_menu, text = "Play game", command=lambda: self.switch_scene(self.GAME_STATES[2])))
-        self.menu_buttons.append(ttk.Button(self.canvas_menu, text = "Settings"))
-        self.menu_buttons.append(ttk.Button(self.canvas_menu, text = "Quit", command=exit))
+        menu_buttons = []
+        menu_buttons.append(ttk.Button(self.canvas_menu, text = "Play game", command=lambda: self.switch_scene(self.GAME_STATES[2])))
+        menu_buttons.append(ttk.Button(self.canvas_menu, text = "Settings"))
+        menu_buttons.append(ttk.Button(self.canvas_menu, text = "Quit", command=exit))
 
-        for index, button in enumerate(self.menu_buttons):
-            y= 273 + 60*index
-            button.place(x="533",y=str(y),width="300", height="50")
+        for index, button in enumerate(menu_buttons):
+            y = 273 + 60 * index
+            button.place(x="533", y = str(y), width = "300", height = "50")
 
+    def initialise_death_screen(self):
+        menu_buttons = []
+        menu_buttons.append(ttk.Button(self.canvas_death_menu, text = "Play again?", command=lambda: self.switch_scene(self.GAME_STATES[2])))
+        menu_buttons.append(ttk.Button(self.canvas_death_menu, text = "Submit to leaderboard"))
+        menu_buttons.append(ttk.Button(self.canvas_death_menu, text = "Back to Main Menu",command = lambda: self.switch_scene(self.GAME_STATES[0])))
+        for index, button in enumerate(menu_buttons):
+            y = 473 + 60 * index
+            button.place(x="533", y = str(y), width = "300", height = "50")
+
+        game_over_label = ttk.Label(self.canvas_death_menu, text = "GAME OVER", justify="center", font=("Arial",100))
+        game_over_label.place(x="300", y="50")
+        score_label = ttk.Label(self.canvas_death_menu, text = "Score: " + str(self.points), justify="center", font=("Arial",70))
+        score_label.place(x="500",y="300")
 
     def initialise_game(self):
+
         self.points = 0
         self.points_counter = StringVar()
         self.points_counter.set(str(self.points))
@@ -66,8 +99,8 @@ class Game:
         point_counter.place(x="633",y="10", height="60")
 
 
-        self.segment_array = []
-        self.boat_array = []
+        self.segment_array.clear()
+        self.boat_array.clear()
 
 
         self.head = Segment(100,400,self.canvas_game, 0)
@@ -80,6 +113,18 @@ class Game:
             self.head.canvas.lift(self.head.drawing) #Optional make head pop
 
         self.sea = self.canvas_game.create_line(0,200,1366,200, fill="Blue")
+
+    def is_collided(self, x1, y1, x2, y2, h1, w1, h2, w2):
+        if x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and y1 + h1 > y2:
+            return True
+        return False
+        coords_a = a.canvas.coords(a.drawing)
+        coords_b = b.canvas.coords(b.drawing)
+        coords_a[0] -= a.width/2
+        coords_a[1] -= a.height/2
+        if coords_a[0] < coords_b[2] and coords_a[0] + a.width > coords_b[0] and coords_a[1] < coords_b[3] and coords_a[1] + a.height > coords_b[1]:
+            return True
+        return False
 
     def main_loop(self):
         self.root.after(self.tick_rate, self.game_loop)
@@ -104,11 +149,12 @@ class Game:
                 exit()
             elif self.current_game_state == self.GAME_STATES[2]:
                 self.switch_scene(self.GAME_STATES[0])
-
+            elif self.current_game_state == self.GAME_STATES[3]:
+                self.switch_scene(self.GAME_STATES[0])
 
 
     def game_loop(self):
-        #print(self.current_game_state)
+        # print(self.current_game_state)
         # self.points += 1
         # self.points_counter.set(str(self.points))
 
@@ -124,13 +170,43 @@ class Game:
             self.boat_array.append(Boat(random()*1366,180,self.canvas_game, self.boat_image, random()*3+1))
 
 
-        for segment in self.segment_array:
-            segment.move_serpent(self.segment_array)
+        head = self.segment_array[0]
+
         for boat in self.boat_array:
+            if self.is_collided(boat.canvas.coords(boat.drawing)[0]-boat.width/2,
+                                boat.canvas.coords(boat.drawing)[1]-boat.height/2,
+                                head.canvas.coords(head.drawing)[0],
+                                head.canvas.coords(head.drawing)[1],
+                                boat.height, boat.width,
+                                head.radius, head.radius):
+                self.boat_array.remove(boat)
+                self.points += 1000
+
+                tail_coords = self.canvas_game.coords(self.segment_array[len(self.segment_array)-1].drawing)
+                for i in range (5):
+                    self.segment_array.append(Segment(tail_coords[0],tail_coords[1],self.canvas_game, len(self.segment_array)))
+
+                boat.canvas.delete(boat.drawing)
+                continue
+
             boat.move()
 
-        self.root.after(self.tick_rate, self.game_loop)
+        for index, segment in enumerate(self.segment_array):
+            if index > 20 and self.is_collided(  self.canvas_game.coords(segment.drawing)[0],
+                                                self.canvas_game.coords(segment.drawing)[1],
+                                                self.canvas_game.coords(head.drawing)[0],
+                                                self.canvas_game.coords(head.drawing)[1],
+                                                head.radius, head.radius, head.radius, head.radius):
+                self.switch_scene(self.GAME_STATES[3])
+                break
 
+            segment.move_serpent(self.segment_array)
+
+        if self.points > 0:
+            self.points -= 1
+        self.points_counter.set(str(self.points))
+
+        self.root.after(self.tick_rate, self.game_loop)
 
 
 #    def draw():
