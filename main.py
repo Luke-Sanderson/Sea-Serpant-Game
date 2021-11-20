@@ -45,6 +45,7 @@ class Game:
                 self.root.after(self.tick_rate, self.game_loop)
             elif next == "leaderboard":
                 self.canvas_menu.pack_forget()
+                self.canvas_leaderboard.delete("all")
                 self.initialise_leaderboard_menu()
                 self.canvas_leaderboard.pack()
 
@@ -129,7 +130,7 @@ class Game:
         self.leaderboard_label = ttk.Label(self.canvas_leaderboard, text = label_text, font=("Arial",30))
         self.leaderboard_label.place(x="200",y="300")
         self.leaderboard_label.lower()
-    def submit_score(self, name, score):
+    def submit_score(self, name, score): # TODO: on second submit, score doesnt update.
         name = name.strip()
         leaderboard = json.load(open("leaderboard.json"))
         for key in leaderboard.keys():
