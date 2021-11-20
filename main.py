@@ -1,18 +1,18 @@
 #Resolution set to 1366x768
-from tkinter import Tk, Canvas, ttk, StringVar, PhotoImage
+from tkinter import Tk, Canvas, ttk, StringVar, PhotoImage, Text
 from time import perf_counter_ns
 from random import randint,random
 from serpent import *
 from boat import *
-
+import json #read json file. json.loads(txt) makes dictionary
 
 class Game:
     """docstring for Game."""
     tick_rate = 30
-    GAME_STATES = ["main_menu", "pause", "in_game", "dead"]
+    GAME_STATES = ["main_menu", "pause", "in_game", "dead", "leaderboard"]
     boat_array = []
     segment_array = []
-
+    submitted = False
     def __init__(self):
         self.root = Tk()
         self.root.title("Sea Serpant Game")
@@ -27,10 +27,12 @@ class Game:
         self.canvas_game = Canvas(self.root, width="1366", height="768")
         self.canvas_menu = Canvas(self.root, width="1366", height="768")
         self.canvas_death_menu = Canvas(self.root, width="1366", height="768")
+        self.canvas_leaderboard = Canvas(self.root, width="1366", height="768")
 
         self.initialise_menu()
         self.canvas_menu.pack()
 
+        self.points = 0
         self.previous_time = perf_counter_ns()
 
     def switch_scene(self, next):
@@ -41,6 +43,10 @@ class Game:
                 self.initialise_game()
                 self.canvas_game.pack()
                 self.root.after(self.tick_rate, self.game_loop)
+            elif next == "leaderboard":
+                self.canvas_menu.pack_forget()
+                self.initialise_leaderboard_menu()
+                self.canvas_leaderboard.pack()
 
         elif self.current_game_state == "in_game":
             if next == "main_menu":
@@ -63,12 +69,25 @@ class Game:
                 self.initialise_game()
                 self.canvas_game.pack()
                 self.root.after(self.tick_rate, self.game_loop)
+            elif next == "leaderboard":
+                self.canvas_death_menu.pack_forget()
+                self.canvas_death_menu.delete("all")
+                self.initialise_leaderboard_menu()
+                self.canvas_leaderboard.pack()
+        elif self.current_game_state == "leaderboard":
+            if next == "main_menu":
+                self.canvas_leaderboard.pack_forget()
+                self.canvas_leaderboard.delete("all")
+                self.canvas_menu.pack()
+
+
 
         self.current_game_state = next
 
     def initialise_menu(self):
         menu_buttons = []
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Play game", command=lambda: self.switch_scene(self.GAME_STATES[2])))
+        menu_buttons.append(ttk.Button(self.canvas_menu, text = "Leaderboard", command=lambda: self.switch_scene(self.GAME_STATES[4])))
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Settings"))
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Quit", command=exit))
 
@@ -79,7 +98,7 @@ class Game:
     def initialise_death_screen(self):
         menu_buttons = []
         menu_buttons.append(ttk.Button(self.canvas_death_menu, text = "Play again?", command=lambda: self.switch_scene(self.GAME_STATES[2])))
-        menu_buttons.append(ttk.Button(self.canvas_death_menu, text = "Submit to leaderboard"))
+        menu_buttons.append(ttk.Button(self.canvas_death_menu, text = "Check leaderboard", command = lambda: self.switch_scene(self.GAME_STATES[4])))
         menu_buttons.append(ttk.Button(self.canvas_death_menu, text = "Back to Main Menu",command = lambda: self.switch_scene(self.GAME_STATES[0])))
         for index, button in enumerate(menu_buttons):
             y = 473 + 60 * index
@@ -90,8 +109,49 @@ class Game:
         score_label = ttk.Label(self.canvas_death_menu, text = "Score: " + str(self.points), justify="center", font=("Arial",70))
         score_label.place(x="500",y="300")
 
-    def initialise_game(self):
+    def initialise_leaderboard_menu(self):
+        menu_buttons = []
+        menu_buttons.append(ttk.Button(self.canvas_leaderboard, text = "Submit to leaderboard",command=lambda: self.submit_score(self.input_name.get("1.0","end"),self.points)))
+        menu_buttons.append(ttk.Button(self.canvas_leaderboard, text = "Back to Main Menu",command = lambda: self.switch_scene(self.GAME_STATES[0])))
+        for index, button in enumerate(menu_buttons):
+            y = 473 + 60 * index
+            button.place(x="533", y = str(y), width = "300", height = "50")
+        self.input_name = Text(self.canvas_leaderboard, width = 40, height = 1)
+        self.input_name.place(x="700",y="400")
 
+        score_label = ttk.Label(self.canvas_leaderboard, text = "Score: " + str(self.points), justify="center", font=("Arial",70))
+        score_label.place(x="500",y="50")
+
+        leaderboard = json.load(open("leaderboard.json"))
+        label_text = ""
+        for key in leaderboard.keys():
+            label_text += f"{key}: {leaderboard[key]['name']} - {leaderboard[key]['score']}\n"
+        self.leaderboard_label = ttk.Label(self.canvas_leaderboard, text = label_text, font=("Arial",30))
+        self.leaderboard_label.place(x="200",y="300")
+        self.leaderboard_label.lower()
+    def submit_score(self, name, score):
+        name = name.strip()
+        leaderboard = json.load(open("leaderboard.json"))
+        for key in leaderboard.keys():
+            if score <= int(leaderboard[key]["score"]) or self.submitted:
+                continue
+            tmp_score = int(leaderboard[key]["score"])
+            tmp_name = leaderboard[key]["name"]
+            leaderboard[key]["score"] = str(score)
+            leaderboard[key]["name"] = name
+            score = tmp_score
+            name = tmp_name
+
+        label_text = ""
+        for key in leaderboard.keys():
+            label_text += f"{key}: {leaderboard[key]['name']} - {leaderboard[key]['score']}\n"
+        self.leaderboard_label["text"] = label_text
+        json.dump(leaderboard,open("leaderboard.json","w"))
+
+        self.submitted = True
+
+    def initialise_game(self):
+        self.submitted = False
         self.points = 0
         self.points_counter = StringVar()
         self.points_counter.set(str(self.points))
@@ -147,11 +207,13 @@ class Game:
         if(Key.keysym == "Escape"):
             if self.current_game_state == self.GAME_STATES[0]:
                 exit()
-            elif self.current_game_state == self.GAME_STATES[2]:
+            else:
                 self.switch_scene(self.GAME_STATES[0])
-            elif self.current_game_state == self.GAME_STATES[3]:
-                self.switch_scene(self.GAME_STATES[0])
-
+            # elif self.current_game_state == self.GAME_STATES[2]:
+            #     self.switch_scene(self.GAME_STATES[0])
+            # elif self.current_game_state == self.GAME_STATES[3]:
+            #     self.switch_scene(self.GAME_STATES[0])
+            #
 
     def game_loop(self):
         # print(self.current_game_state)

@@ -8,6 +8,7 @@ class Boat(object):
         self.height = src_image.height()
         self.canvas = canvas
         self.speed = speed
+        
     def move(self):
         if self.canvas.coords(self.drawing)[0] > 1341:
             self.direction = 1
