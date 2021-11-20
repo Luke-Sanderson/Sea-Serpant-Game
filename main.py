@@ -18,7 +18,6 @@ class Game:
         self.root.title("Sea Serpant Game")
         self.root.geometry("1366x768")
         self.root.attributes("-fullscreen", True)
-        self.root.config(cursor = "pirate")
 
         self.boat_image = PhotoImage(file="Boat1.png") #TODO: Add more boat sprites to an array. Make it randomly choose the sprite
 
@@ -86,6 +85,7 @@ class Game:
         self.current_game_state = next
 
     def initialise_menu(self):
+        self.root.config(cursor = "sailboat")
         menu_buttons = []
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Play game", command=lambda: self.switch_scene(self.GAME_STATES[2])))
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Leaderboard", command=lambda: self.switch_scene(self.GAME_STATES[4])))
@@ -97,6 +97,7 @@ class Game:
             button.place(x="533", y = str(y), width = "300", height = "50")
 
     def initialise_death_screen(self):
+        self.root.config(cursor = "sailboat")
         menu_buttons = []
         menu_buttons.append(ttk.Button(self.canvas_death_menu, text = "Play again?", command=lambda: self.switch_scene(self.GAME_STATES[2])))
         menu_buttons.append(ttk.Button(self.canvas_death_menu, text = "Check leaderboard", command = lambda: self.switch_scene(self.GAME_STATES[4])))
@@ -152,6 +153,7 @@ class Game:
         self.submitted = True
 
     def initialise_game(self):
+        self.root.config(cursor = "none")
         self.submitted = False
         self.points = 0
         self.points_counter = StringVar()
