@@ -27,6 +27,7 @@ class Game:
         self.canvas_menu = Canvas(self.root, width="1366", height="768")
         self.canvas_death_menu = Canvas(self.root, width="1366", height="768")
         self.canvas_leaderboard = Canvas(self.root, width="1366", height="768")
+        self.canvas_pause_menu = Canvas(self.root, width="1366", height="768")
 
         self.initialise_menu()
         self.canvas_menu.pack()
@@ -49,10 +50,10 @@ class Game:
                 self.canvas_leaderboard.pack()
 
         elif self.current_game_state == "in_game":
-            if next == "main_menu":
+            if next == "pause":
+                self.initialise_pause_menu()
                 self.canvas_game.pack_forget()
-                self.canvas_game.delete("all")
-                self.canvas_menu.pack()
+                self.canvas_pause_menu.pack()
             elif next == "dead":
                 self.canvas_game.pack_forget()
                 self.canvas_game.delete("all")
@@ -79,8 +80,18 @@ class Game:
                 self.canvas_leaderboard.pack_forget()
                 self.canvas_leaderboard.delete("all")
                 self.canvas_menu.pack()
-
-
+        elif self.current_game_state == "pause":
+            if next == "in_game":
+                self.canvas_pause_menu.pack_forget()
+                self.canvas_pause_menu.delete("all")
+                self.canvas_game.pack()
+                self.root.after(self.tick_rate, self.game_loop)
+            if next == "main_menu":
+                self.canvas_game.delete("all")
+                self.canvas_game.pack_forget()
+                self.canvas_pause_menu.delete("all")
+                self.canvas_pause_menu.pack_forget()
+                self.canvas_menu.pack()
 
         self.current_game_state = next
 
@@ -91,6 +102,16 @@ class Game:
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Leaderboard", command=lambda: self.switch_scene(self.GAME_STATES[4])))
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Settings"))
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Quit", command=exit))
+
+        for index, button in enumerate(menu_buttons):
+            y = 273 + 60 * index
+            button.place(x="533", y = str(y), width = "300", height = "50")
+    def initialise_pause_menu(self):
+        self.root.config(cursor = "sailboat")
+        menu_buttons = []
+        menu_buttons.append(ttk.Button(self.canvas_pause_menu, text = "Resume", command=lambda: self.switch_scene(self.GAME_STATES[2])))
+        menu_buttons.append(ttk.Button(self.canvas_pause_menu, text = "Save Game"))
+        menu_buttons.append(ttk.Button(self.canvas_pause_menu, text = "Back to Main Menu", command=lambda: self.switch_scene(self.GAME_STATES[0])))
 
         for index, button in enumerate(menu_buttons):
             y = 273 + 60 * index
@@ -210,13 +231,10 @@ class Game:
         if(Key.keysym == "Escape"):
             if self.current_game_state == self.GAME_STATES[0]:
                 exit()
+            elif self.current_game_state == self.GAME_STATES[2]:
+                self.switch_scene(self.GAME_STATES[1])
             else:
                 self.switch_scene(self.GAME_STATES[0])
-            # elif self.current_game_state == self.GAME_STATES[2]:
-            #     self.switch_scene(self.GAME_STATES[0])
-            # elif self.current_game_state == self.GAME_STATES[3]:
-            #     self.switch_scene(self.GAME_STATES[0])
-            #
 
     def game_loop(self):
         # print(self.current_game_state)
