@@ -245,7 +245,7 @@ class Game:
                 continue
             self.segment_array.append(Segment(save["segments"]["x"+str(i)],save["segments"]["y"+str(i)],self.canvas_game, i ))
             self.head.canvas.lift(self.head.drawing) #Optional make head pop
-        for i in range(floor(len(save["boats"].keys())/2)):
+        for i in range(floor(len(save["boats"].keys())/3)):
             self.boat_array.append(Boat(save["boats"]["x"+str(i)],180,self.canvas_game, self.boat_images[save["boats"]["colour"+str(i)]], save["boats"]["speed"+str(i)]))
 
         self.sea = self.canvas_game.create_line(0,200,1366,200, fill="Blue")
