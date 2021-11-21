@@ -4,11 +4,12 @@ class Boat(object):
     speed = 2;
     def __init__(self, x, y, canvas, src_image, speed):
         self.drawing = canvas.create_image(x,y,image = src_image)
+        self.image = src_image
         self.width = src_image.width()
         self.height = src_image.height()
         self.canvas = canvas
         self.speed = speed
-        
+
     def move(self):
         if self.canvas.coords(self.drawing)[0] > 1341:
             self.direction = 1

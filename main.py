@@ -2,6 +2,7 @@
 from tkinter import Tk, Canvas, ttk, StringVar, PhotoImage, Text
 from time import perf_counter_ns
 from random import randint,random
+from math import floor
 from serpent import *
 from boat import *
 import json #read json file. json.loads(txt) makes dictionary
@@ -101,8 +102,9 @@ class Game:
     def initialise_menu(self):
         self.root.config(cursor = "sailboat")
         menu_buttons = []
-        menu_buttons.append(ttk.Button(self.canvas_menu, text = "Play game", command=lambda: self.switch_scene(self.GAME_STATES[2])))
+        menu_buttons.append(ttk.Button(self.canvas_menu, text = "Play Game", command=lambda: self.switch_scene(self.GAME_STATES[2])))
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Leaderboard", command=lambda: self.switch_scene(self.GAME_STATES[4])))
+        menu_buttons.append(ttk.Button(self.canvas_menu, text = "Load Game", command=self.load_game))
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Settings"))
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Quit", command=exit))
 
@@ -210,7 +212,8 @@ class Game:
             segments_save["y"+str(index)] = segment.canvas.coords(segment.drawing)[1]
         for index, boat in enumerate(boats):
             boats_save["x"+str(index)] = boat.canvas.coords(boat.drawing)[0]
-            boats_save["y"+str(index)] = boat.canvas.coords(boat.drawing)[1]
+            boats_save["colour"+str(index)] = self.boat_images.index(boat.image)
+            boats_save["speed"+str(index)] = boat.speed
 
         save = {}
         save["segments"] = segments_save
@@ -218,6 +221,39 @@ class Game:
         save["points"] = self.points
 
         json.dump(save, open("save_file.json", "w"))
+    def load_game(self):
+        save = json.load(open("save_file.json"))
+
+        self.root.config(cursor = "none")
+        self.submitted = False
+        self.points = save["points"]
+        self.points_counter = StringVar()
+        self.points_counter.set(str(self.points))
+        point_counter = ttk.Label(self.canvas_game, textvariable = self.points_counter, justify="center", font=("Arial",40))
+        point_counter.place(x="633",y="10", height="60")
+
+        self.segment_array.clear()
+        self.boat_array.clear()
+        keys = save.keys()
+        self.head = Segment(save["segments"]["x0"],save["segments"]["y0"],self.canvas_game, 0)
+        self.head.direction = save["segments"]["direction"]
+        self.canvas_game.itemconfig(self.head.drawing, fill="green")
+        self.segment_array.append(self.head)
+
+        for i in range(floor(len(save["segments"].keys())/2)):
+            if i == 0:
+                continue
+            self.segment_array.append(Segment(save["segments"]["x"+str(i)],save["segments"]["y"+str(i)],self.canvas_game, i ))
+            self.head.canvas.lift(self.head.drawing) #Optional make head pop
+        for i in range(floor(len(save["boats"].keys())/2)):
+            self.boat_array.append(Boat(save["boats"]["x"+str(i)],180,self.canvas_game, self.boat_images[save["boats"]["colour"+str(i)]], save["boats"]["speed"+str(i)]))
+
+        self.sea = self.canvas_game.create_line(0,200,1366,200, fill="Blue")
+
+        self.canvas_menu.pack_forget()
+        self.canvas_game.pack()
+        self.current_game_state = self.GAME_STATES[2]
+        self.root.after(self.tick_rate, self.game_loop)
 
     def is_collided(self, x1, y1, x2, y2, h1, w1, h2, w2):
         if x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and y1 + h1 > y2:
