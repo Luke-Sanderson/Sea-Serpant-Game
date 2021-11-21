@@ -19,7 +19,10 @@ class Game:
         self.root.geometry("1366x768")
         self.root.attributes("-fullscreen", True)
 
-        self.boat_image = PhotoImage(file="Boat1.png") #TODO: Add more boat sprites to an array. Make it randomly choose the sprite
+        self.boat_images = []
+        self.boat_images.append(PhotoImage(file="Boat1.png"))
+        self.boat_images.append(PhotoImage(file="Boat2.png"))
+        self.boat_images.append(PhotoImage(file="Boat3.png"))
 
         self.current_game_state = self.GAME_STATES[0]
 
@@ -110,7 +113,7 @@ class Game:
         self.root.config(cursor = "sailboat")
         menu_buttons = []
         menu_buttons.append(ttk.Button(self.canvas_pause_menu, text = "Resume", command=lambda: self.switch_scene(self.GAME_STATES[2])))
-        menu_buttons.append(ttk.Button(self.canvas_pause_menu, text = "Save Game"))
+        menu_buttons.append(ttk.Button(self.canvas_pause_menu, text = "Save Game", command=lambda: self.save_game(self.segment_array, self.boat_array)))
         menu_buttons.append(ttk.Button(self.canvas_pause_menu, text = "Back to Main Menu", command=lambda: self.switch_scene(self.GAME_STATES[0])))
 
         for index, button in enumerate(menu_buttons):
@@ -198,6 +201,24 @@ class Game:
 
         self.sea = self.canvas_game.create_line(0,200,1366,200, fill="Blue")
 
+    def save_game(self, segments, boats):
+        segments_save = {}
+        boats_save = {}
+        segments_save["direction"] = segments[0].direction
+        for index, segment in enumerate(segments):
+            segments_save["x"+str(index)] = segment.canvas.coords(segment.drawing)[0]
+            segments_save["y"+str(index)] = segment.canvas.coords(segment.drawing)[1]
+        for index, boat in enumerate(boats):
+            boats_save["x"+str(index)] = boat.canvas.coords(boat.drawing)[0]
+            boats_save["y"+str(index)] = boat.canvas.coords(boat.drawing)[1]
+
+        save = {}
+        save["segments"] = segments_save
+        save["boats"] = boats_save
+        save["points"] = self.points
+
+        json.dump(save, open("save_file.json", "w"))
+
     def is_collided(self, x1, y1, x2, y2, h1, w1, h2, w2):
         if x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and y1 + h1 > y2:
             return True
@@ -250,7 +271,7 @@ class Game:
             return
 
         if len(self.boat_array) == 0 or (len(self.boat_array) < 5 and randint(0,200) == 1):
-            self.boat_array.append(Boat(random()*1366,180,self.canvas_game, self.boat_image, random()*3+1))
+            self.boat_array.append(Boat(random()*1366,180,self.canvas_game, self.boat_images[randint(0,2)], random()*3+1))
 
 
         head = self.segment_array[0]
