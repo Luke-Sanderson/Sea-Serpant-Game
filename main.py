@@ -1,20 +1,22 @@
 #Resolution set to 1366x768
-from tkinter import Tk, Canvas, ttk, StringVar, PhotoImage, Text
+from tkinter import Tk, Canvas, ttk, StringVar, PhotoImage, Text, Image
 from time import perf_counter_ns
 from random import randint,random
 from math import floor
 from serpent import *
 from boat import *
-import json #read json file. json.loads(txt) makes dictionary
+import json
 
 class Game:
     """docstring for Game."""
     tick_rate = 30
-    GAME_STATES = ["main_menu", "pause", "in_game", "dead", "leaderboard"]
+    GAME_STATES = ["main_menu", "pause", "in_game", "dead", "leaderboard","settings"]
     boat_array = []
     segment_array = []
+    key_binds = {"left":"a","right":"d","add_length":"c","escape":"escape"}
     submitted = False
     def __init__(self):
+        #Creates game window
         self.root = Tk()
         self.root.title("Sea Serpant Game")
         self.root.geometry("1366x768")
@@ -29,10 +31,12 @@ class Game:
 
         self.canvas_game = Canvas(self.root, width="1366", height="768")
         self.canvas_menu = Canvas(self.root, width="1366", height="768")
+        self.canvas_settings = Canvas(self.root, width="1366", height="768")
         self.canvas_death_menu = Canvas(self.root, width="1366", height="768")
         self.canvas_leaderboard = Canvas(self.root, width="1366", height="768")
         self.canvas_pause_menu = Canvas(self.root, width="1366", height="768")
 
+        self.initialise_settings()
         self.initialise_menu()
         self.canvas_menu.pack()
 
@@ -40,7 +44,7 @@ class Game:
         self.previous_time = perf_counter_ns()
 
     def switch_scene(self, next):
-
+        """Switches between game states and initialises each menu"""
         if self.current_game_state == "main_menu":
             if next == "in_game":
                 self.canvas_menu.pack_forget()
@@ -52,7 +56,9 @@ class Game:
                 self.canvas_leaderboard.delete("all")
                 self.initialise_leaderboard_menu()
                 self.canvas_leaderboard.pack()
-
+            elif next == "settings":
+                self.canvas_menu.pack_forget()
+                self.canvas_settings.pack()
         elif self.current_game_state == "in_game":
             if next == "pause":
                 self.initialise_pause_menu()
@@ -96,22 +102,46 @@ class Game:
                 self.canvas_pause_menu.delete("all")
                 self.canvas_pause_menu.pack_forget()
                 self.canvas_menu.pack()
-
+        elif self.current_game_state == "settings":
+            if next == "main_menu":
+                self.canvas_settings.pack_forget()
+                self.canvas_menu.pack()
         self.current_game_state = next
 
     def initialise_menu(self):
+        """Initialises the main menu"""
         self.root.config(cursor = "sailboat")
         menu_buttons = []
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Play Game", command=lambda: self.switch_scene(self.GAME_STATES[2])))
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Leaderboard", command=lambda: self.switch_scene(self.GAME_STATES[4])))
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Load Game", command=self.load_game))
-        menu_buttons.append(ttk.Button(self.canvas_menu, text = "Settings"))
+        menu_buttons.append(ttk.Button(self.canvas_menu, text = "Settings", command=lambda: self.switch_scene(self.GAME_STATES[5])))
         menu_buttons.append(ttk.Button(self.canvas_menu, text = "Quit", command=exit))
 
         for index, button in enumerate(menu_buttons):
             y = 273 + 60 * index
             button.place(x="533", y = str(y), width = "300", height = "50")
+    def initialise_settings(self):
+        """Initialises the settings menu"""
+        left_button = StringVar(value = self.key_binds["left"])
+        right_button = StringVar(value = self.key_binds["right"])
+        add_button = StringVar(value = self.key_binds["add_length"])
+        escape_button = StringVar(value = self.key_binds["escape"])
+        menu_buttons = []
+        menu_buttons.append(ttk.Button(self.canvas_settings, text="Turn Left: <" + left_button.get() + ">",command=lambda:self.set_key("left",left_button)))
+        menu_buttons.append(ttk.Button(self.canvas_settings, text="Turn Right: <" + right_button.get() +">",command=lambda:self.set_key("right",right_button)))
+        menu_buttons.append(ttk.Button(self.canvas_settings, text="Add Length: <" + add_button.get() + ">",command=lambda:self.set_key("add_length",add_button)))
+        menu_buttons.append(ttk.Button(self.canvas_settings, text="Return: <" + escape_button.get() + ">",command=lambda:self.set_key("escape",escape_button)))
+        menu_buttons.append(ttk.Button(self.canvas_settings, text = "Back to menu", command=lambda: self.switch_scene(self.GAME_STATES[0])))
+
+        for index, button in enumerate(menu_buttons):
+            y = 273 + 60 * index
+            button.place(x="533", y = str(y), width = "300", height = "50")
+    def set_key(self, key, string):
+        """Changes the key binds to the next key the user presses"""
+
     def initialise_pause_menu(self):
+        """Initialises the pause screen"""
         self.root.config(cursor = "sailboat")
         menu_buttons = []
         menu_buttons.append(ttk.Button(self.canvas_pause_menu, text = "Resume", command=lambda: self.switch_scene(self.GAME_STATES[2])))
@@ -123,6 +153,7 @@ class Game:
             button.place(x="533", y = str(y), width = "300", height = "50")
 
     def initialise_death_screen(self):
+        """Initialises the game over screen"""
         self.root.config(cursor = "sailboat")
         menu_buttons = []
         menu_buttons.append(ttk.Button(self.canvas_death_menu, text = "Play again?", command=lambda: self.switch_scene(self.GAME_STATES[2])))
@@ -138,6 +169,7 @@ class Game:
         score_label.place(x="500",y="300")
 
     def initialise_leaderboard_menu(self):
+        """Initialises the leaderboard menu and loads leaderboard data"""
         menu_buttons = []
         menu_buttons.append(ttk.Button(self.canvas_leaderboard, text = "Submit to leaderboard",command=lambda: self.submit_score(self.input_name.get("1.0","end"),self.points)))
         menu_buttons.append(ttk.Button(self.canvas_leaderboard, text = "Back to Main Menu",command = lambda: self.switch_scene(self.GAME_STATES[0])))
@@ -157,8 +189,13 @@ class Game:
         self.leaderboard_label = ttk.Label(self.canvas_leaderboard, text = label_text, font=("Arial",30))
         self.leaderboard_label.place(x="200",y="300")
         self.leaderboard_label.lower()
+
     def submit_score(self, name, score): # TODO: on second submit, score doesnt update.
+        """Adds current name and score to leaderboard"""
         name = name.strip()
+        if name == "":
+            return
+
         leaderboard = json.load(open("leaderboard.json"))
         for key in leaderboard.keys():
             if score <= int(leaderboard[key]["score"]) or self.submitted:
@@ -179,6 +216,7 @@ class Game:
         self.submitted = True
 
     def initialise_game(self):
+        """Sets up new game"""
         self.root.config(cursor = "none")
         self.submitted = False
         self.points = 0
@@ -204,6 +242,7 @@ class Game:
         self.sea = self.canvas_game.create_line(0,200,1366,200, fill="Blue")
 
     def save_game(self, segments, boats):
+        """Saves current game state to save_file.json"""
         segments_save = {}
         boats_save = {}
         segments_save["direction"] = segments[0].direction
@@ -222,6 +261,7 @@ class Game:
 
         json.dump(save, open("save_file.json", "w"))
     def load_game(self):
+        """loads a new game using game state stored in save_file.json"""
         save = json.load(open("save_file.json"))
 
         self.root.config(cursor = "none")
@@ -256,6 +296,7 @@ class Game:
         self.root.after(self.tick_rate, self.game_loop)
 
     def is_collided(self, x1, y1, x2, y2, h1, w1, h2, w2):
+        """Checks if two rectangles are overlapping"""
         if x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and y1 + h1 > y2:
             return True
         return False
@@ -268,24 +309,27 @@ class Game:
         return False
 
     def main_loop(self):
+        """Sets up game loop and tkinter loop"""
         self.root.after(self.tick_rate, self.game_loop)
         self.root.bind("<Key>", self.key_press)
         self.root.mainloop()
 
     def key_press(self, Key):
+        """Controls how game responds to key presses depending on game state"""
+        key = Key.keysym.lower()
         if self.current_game_state == self.GAME_STATES[2]:
-            if(Key.keysym.lower() == "a" and self.head.canvas.coords(self.head.drawing)[1] > 200):
+            if(key == self.key_binds["left"] and self.head.canvas.coords(self.head.drawing)[1] > 200):
                 self.head.direction -= 0.1
                 self.head.velocity -= 0.1
-            elif(Key.keysym.lower() == "d" and self.head.canvas.coords(self.head.drawing)[1] > 200):
+            elif(key == self.key_binds["right"] and self.head.canvas.coords(self.head.drawing)[1] > 200):
                 self.head.direction += 0.1
                 self.head.velocity -= 0.1
-            elif(Key.keysym.lower() == "c"):
+            elif(key == self.key_binds["add_length"]):
                 coords = self.canvas_game.coords(self.segment_array[len(self.segment_array) - 1].drawing)
                 self.segment_array.append(Segment(coords[0],coords[1],self.canvas_game, len(self.segment_array)))
                 self.head.canvas.lift(self.head.drawing) #Optional make head pop
 
-        if(Key.keysym == "Escape"):
+        if(key == self.key_binds["escape"]):
             if self.current_game_state == self.GAME_STATES[0]:
                 exit()
             elif self.current_game_state == self.GAME_STATES[2]:
@@ -294,6 +338,7 @@ class Game:
                 self.switch_scene(self.GAME_STATES[0])
 
     def game_loop(self):
+        """The loop used to control gameplay"""
         # print(self.current_game_state)
         # self.points += 1
         # self.points_counter.set(str(self.points))
