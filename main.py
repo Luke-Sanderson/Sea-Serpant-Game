@@ -1,5 +1,5 @@
 #Resolution set to 1366x768
-from tkinter import Tk, Canvas, ttk, StringVar, PhotoImage, Text, Image
+from tkinter import Tk, Canvas, ttk, StringVar, PhotoImage, Text
 from time import perf_counter_ns
 from random import randint,random
 from math import floor
@@ -13,8 +13,9 @@ class Game:
     GAME_STATES = ["main_menu", "pause", "in_game", "dead", "leaderboard","settings"]
     boat_array = []
     segment_array = []
-    key_binds = {"left":"a","right":"d","add_length":"c","escape":"escape"}
+    key_binds = {"left":"a","right":"d","add_length":"c","escape":"escape","boss_key":"b"}
     submitted = False
+    boss_showing = False
     def __init__(self):
         #Creates game window
         self.root = Tk()
@@ -26,6 +27,7 @@ class Game:
         self.boat_images.append(PhotoImage(file="Boat1.png"))
         self.boat_images.append(PhotoImage(file="Boat2.png"))
         self.boat_images.append(PhotoImage(file="Boat3.png"))
+        self.boss_key_image = PhotoImage(file="Boss-Key-Image.png")
 
         self.set_hotkey = "none"
         self.current_game_state = self.GAME_STATES[0]
@@ -342,12 +344,23 @@ class Game:
                 coords = self.canvas_game.coords(self.segment_array[len(self.segment_array) - 1].drawing)
                 self.segment_array.append(Segment(coords[0],coords[1],self.canvas_game, len(self.segment_array)))
                 self.head.canvas.lift(self.head.drawing) #Optional make head pop
+            elif(key == self.key_binds["boss_key"]):
+                self.switch_scene(self.GAME_STATES[1])
+                self.boss_image = ttk.Label(self.canvas_pause_menu, image=self.boss_key_image)
+                self.boss_image.place(x="0",y="0")
+                self.boss_showing = True
+        elif self.current_game_state == self.GAME_STATES[1] and self.boss_showing and key == self.key_binds["boss_key"]:
+            self.boss_showing = False
+            self.boss_image.place_forget()
 
         if(key == self.key_binds["escape"]):
             if self.current_game_state == self.GAME_STATES[0]:
                 exit()
             elif self.current_game_state == self.GAME_STATES[2]:
                 self.switch_scene(self.GAME_STATES[1])
+            elif self.boss_showing:
+                self.boss_showing = False
+                self.boss_image.place_forget()
             else:
                 self.switch_scene(self.GAME_STATES[0])
 
