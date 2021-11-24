@@ -13,7 +13,7 @@ class Game:
     """docstring for Game."""
     tick_rate = 30
     GAME_STATES = ["main_menu", "pause", "in_game",
-                   "dead", "leaderboard", "settings"]
+                   "dead", "leaderboard", "settings", "info"]
     boat_array = []
     mine_array = []
     segment_array = []
@@ -35,6 +35,8 @@ class Game:
         self.boat_images.append(PhotoImage(file="Boat3.png"))
         # Mine image art from https://www.subpng.com/png-keknty/
         self.mine_image = PhotoImage(file="mine.png")
+        # Info icon image from https://www.flaticon.com/free-icons/information
+        self.info_image = PhotoImage(file="info.png")
         self.boss_key_image = PhotoImage(file="Boss-Key-Image.png")
         self.set_hotkey = "none"
         self.current_game_state = self.GAME_STATES[0]
@@ -51,7 +53,10 @@ class Game:
                                          height="768", bg="#add8e6")
         self.canvas_pause_menu = Canvas(self.root, width="1366",
                                         height="768", bg="#add8e6")
+        self.canvas_info = Canvas(self.root, width="1366",
+                                  height="768", bg="#add8e6")
 
+        self.initialise_info_menu()
         self.initialise_settings()
         self.initialise_menu()
         self.canvas_menu.pack()
@@ -75,6 +80,9 @@ class Game:
             elif next == "settings":
                 self.canvas_menu.pack_forget()
                 self.canvas_settings.pack()
+            elif next == "info":
+                self.canvas_menu.pack_forget()
+                self.canvas_info.pack()
         elif self.current_game_state == "in_game":
             if next == "pause":
                 self.initialise_pause_menu()
@@ -122,6 +130,10 @@ class Game:
             if next == "main_menu":
                 self.canvas_settings.pack_forget()
                 self.canvas_menu.pack()
+        elif self.current_game_state == "info":
+            if next == "main_menu":
+                self.canvas_info.pack_forget()
+                self.canvas_menu.pack()
         self.current_game_state = next
 
     def initialise_menu(self):
@@ -145,6 +157,10 @@ class Game:
         for index, button in enumerate(menu_buttons):
             y = 273 + 60 * index
             button.place(x="533", y=str(y), width="300", height="50")
+        ttk.Button(self.canvas_menu, text="",
+                   image=self.info_image,
+                   command=lambda:self.switch_scene(self.GAME_STATES[6])).place(x="1311", y="5",
+                                                  width="50", height="50")
 
     def initialise_settings(self):
         """Initialises the settings menu"""
@@ -179,6 +195,24 @@ class Game:
         """Changes the key binds to the next key the user presses"""
         self.set_hotkey = key_bind
         self.canvas_settings.config(background="grey")
+
+    def initialise_info_menu(self):
+        ttk.Button(self.canvas_info,
+                   text="Back to Main Menu",
+                   command=lambda:
+                   self.switch_scene(self.GAME_STATES[0])).place(x="533",
+                                                                 y="600",
+                                                                 width="300",
+                                                                 height="50")
+        ttk.Label(self.canvas_info,
+              text="Collect points by destroying boats\n"
+                   "Avoid mines and your own tail\n"
+                   "Hold A or D to turn\n"
+                   "Press C to add length and B for boss key",
+              justify="center",
+              background="#add8e6",
+              font=("Arial", 40)).place(x="200", y="200")
+
 
     def initialise_pause_menu(self):
         """Initialises the pause screen"""
@@ -582,7 +616,7 @@ class Game:
             else:
                 continue
             break
-                
+
         if self.points > 0:
             self.points -= 1
         self.points_counter.set(str(self.points))
