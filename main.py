@@ -192,7 +192,8 @@ class Game:
                                        text="Save Game",
                                        command=lambda:
                                        self.save_game(self.segment_array,
-                                                      self.boat_array)))
+                                                      self.boat_array,
+                                                      self.mine_array)))
         menu_buttons.append(ttk.Button(self.canvas_pause_menu,
                                        text="Back to Main Menu",
                                        command=lambda:
@@ -335,10 +336,11 @@ class Game:
 
         self.canvas_game.create_line(0, 200, 1366, 200, fill="Blue")
 
-    def save_game(self, segments, boats):
+    def save_game(self, segments, boats, mines):
         """Saves current game state to save_file.json"""
         segments_save = {}
         boats_save = {}
+        mines_save = {}
         segments_save["direction"] = segments[0].direction
         for index, segment in enumerate(segments):
             segments_save["x"+str(index)] = segment.canvas.coords(
@@ -351,9 +353,14 @@ class Game:
                                               boat.image)
             boats_save["speed"+str(index)] = boat.speed
 
+        for index, mine in enumerate(mines):
+            mines_save["x"+str(index)] = mine.canvas.coords(mine.drawing)[0]
+            mines_save["y"+str(index)] = mine.canvas.coords(mine.drawing)[1]
+
         save = {}
         save["segments"] = segments_save
         save["boats"] = boats_save
+        save["mines"] = mines_save
         save["points"] = self.points
 
         json.dump(save, open("save_file.json", "w"))
@@ -392,13 +399,18 @@ class Game:
                                               save["segments"]["y"+str(i)],
                                               self.canvas_game, i))
             self.head.canvas.lift(self.head.drawing)
-        for i in range(floor(len(save["boats"].keys())/3)):
-            self.boat_array.append(Boat(save["boats"]["x"+str(i)], 180,
+        for i in range(floor(len(save["boats"].keys()) / 3)):
+            self.boat_array.append(Boat(save["boats"]["x" + str(i)], 180,
                                         self.canvas_game,
                                         self.boat_images[save["boats"]
                                                              ["colour" +
                                                               str(i)]],
                                         save["boats"]["speed"+str(i)]))
+        for i in range(floor(len(save["mines"].keys()) / 2)):
+            self.mine_array.append(Mine(save["mines"]["x" + str(i)],
+                                        save["mines"]["y" + str(i)],
+                                        self.canvas_game,
+                                        self.mine_image))
 
         self.canvas_game.create_line(0, 200, 1366, 200, fill="Blue")
 
@@ -554,6 +566,8 @@ class Game:
                                                head.radius, head.radius):
                 self.switch_scene(self.GAME_STATES[3])
                 break
+            segment.move_serpent(self.segment_array)
+
             for mine in self.mine_array:
                 if self.is_collided(mine.canvas.coords(mine.drawing)[0] -
                                     mine.width / 2,
@@ -562,10 +576,13 @@ class Game:
                                     segment.canvas.coords(segment.drawing)[0],
                                     segment.canvas.coords(segment.drawing)[1],
                                     mine.height, mine.width,
-                                    segment.radius, segment.radius):                    self.switch_scene(self.GAME_STATES[3])
-
-            segment.move_serpent(self.segment_array)
-
+                                    segment.radius, segment.radius):
+                    self.switch_scene(self.GAME_STATES[3])
+                    break
+            else:
+                continue
+            break
+                
         if self.points > 0:
             self.points -= 1
         self.points_counter.set(str(self.points))
