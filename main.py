@@ -1,6 +1,6 @@
 # Resolution set to 1366x768
 from tkinter import Tk, Canvas, ttk, StringVar, PhotoImage, Text
-from time import time_ns
+from time import perf_counter_ns
 from random import randint, random
 from math import floor
 from serpent import Segment
@@ -65,7 +65,7 @@ class Game:
         self.canvas_menu.pack()
 
         self.points = 0
-        self.previous_time = time_ns()
+        self.previous_time = perf_counter_ns()
 
     def switch_scene(self, next):
         """Switches between game states and initialises each menu"""
@@ -572,10 +572,10 @@ class Game:
 
         # Calculates difference in time between update loops
         # Adjusts tick rate depending on the difference
-        difference = (100 / 3) - ((time_ns() -
+        difference = (100 / 3) - ((perf_counter_ns() -
                                   self.previous_time) / 1000000)
         self.tick_rate += round(difference)
-        self.previous_time = time_ns()
+        self.previous_time = perf_counter_ns()
         # Only does following code if in game
         if self.current_game_state != self.GAME_STATES[2]:
             return
